@@ -8,14 +8,15 @@ class HistoryPage extends StatefulWidget {
   final List<String> scannedCodes;
   final VoidCallback onDelete;
 
-  const HistoryPage({Key? key, required this.scannedCodes, required this.onDelete}) : super(key: key);
+  const HistoryPage(
+      {super.key, required this.scannedCodes, required this.onDelete});
 
   @override
   _HistoryPageState createState() => _HistoryPageState();
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  final Set<int> _selectedItems = Set<int>();
+  final Set<int> _selectedItems = <int>{};
 
   Future<String?> _showDescriptionInputDialog(BuildContext context) async {
     String? description;
@@ -48,9 +49,8 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _shareDataDirectly() async {
     final String? description = await _showDescriptionInputDialog(context);
     if (description == null || description.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Описание не введено. Поделиться невозможно.'))
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Описание не введено. Поделиться невозможно.')));
       return;
     }
 
@@ -64,23 +64,23 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _exportWithDescription() async {
     final String? description = await _showDescriptionInputDialog(context);
     if (description == null || description.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Описание не введено. Экспорт отменён.'))
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Описание не введено. Экспорт отменён.')));
       return;
     }
 
     final StringBuffer csvBuffer = StringBuffer();
     csvBuffer.write('\ufeff');
-    widget.scannedCodes.forEach((code) {
+    for (var code in widget.scannedCodes) {
       csvBuffer.writeln('"$code";"$description"');
-    });
+    }
 
     final Directory dir = await getApplicationDocumentsDirectory();
     final String path = '${dir.path}/scanned_codes.csv';
     final File file = File(path);
 
-    await file.writeAsString(csvBuffer.toString(), mode: FileMode.write, flush: true, encoding: utf8);
+    await file.writeAsString(csvBuffer.toString(),
+        mode: FileMode.write, flush: true, encoding: utf8);
 
     Share.shareFiles([file.path], text: 'Сканированные штрих-коды с описанием');
   }
@@ -90,7 +90,8 @@ class _HistoryPageState extends State<HistoryPage> {
       if (_selectedItems.length == widget.scannedCodes.length) {
         _selectedItems.clear();
       } else {
-        _selectedItems.addAll(List.generate(widget.scannedCodes.length, (index) => index));
+        _selectedItems.addAll(
+            List.generate(widget.scannedCodes.length, (index) => index));
       }
     });
   }
@@ -103,7 +104,9 @@ class _HistoryPageState extends State<HistoryPage> {
         title: const Text('История сканирований'),
         actions: [
           IconButton(
-            icon: Icon(isAllSelected ? Icons.indeterminate_check_box : Icons.select_all),
+            icon: Icon(isAllSelected
+                ? Icons.indeterminate_check_box
+                : Icons.select_all),
             onPressed: _selectAll,
             tooltip: 'Выбрать все',
           ),
@@ -124,29 +127,30 @@ class _HistoryPageState extends State<HistoryPage> {
         ],
       ),
       body: widget.scannedCodes.isEmpty
-        ? const Center(child: Text("История пуста"))
-        : ListView.builder(
-            itemCount: widget.scannedCodes.length,
-            itemBuilder: (context, index) {
-              bool isSelected = _selectedItems.contains(index);
-              return ListTile(
-                title: Text(widget.scannedCodes[index]),
-                trailing: Icon(
-                 
-                  isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                ),
-                onTap: () {
-                  setState(() {
-                    if (isSelected) {
-                      _selectedItems.remove(index);
-                    } else {
-                      _selectedItems.add(index);
-                    }
-                  });
-                },
-              );
-            },
-          ),
+          ? const Center(child: Text("История пуста"))
+          : ListView.builder(
+              itemCount: widget.scannedCodes.length,
+              itemBuilder: (context, index) {
+                bool isSelected = _selectedItems.contains(index);
+                return ListTile(
+                  title: Text(widget.scannedCodes[index]),
+                  trailing: Icon(
+                    isSelected
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedItems.remove(index);
+                      } else {
+                        _selectedItems.add(index);
+                      }
+                    });
+                  },
+                );
+              },
+            ),
     );
   }
 }
