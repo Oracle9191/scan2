@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lottie/lottie.dart';
-import 'history_page.dart'; // Проверьте правильный путь к файлу
+import 'history_page.dart'; // Убедитесь, что указан правильный путь к файлу
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 const appTitle = 'My Scanner Demo';
 const buttonScan = 'СКАНИРОВАТЬ';
@@ -12,20 +12,26 @@ const tooltipHistory = 'Показать историю сканирований
 const scanButtonColor = '#28386a';
 const cancelButtonText = 'Cancel';
 const scanTitle = 'ОТСКАНИРУЙТЕ ШТРИХ КОД';
-const scannedCodesKey = 'scannedCodes'; // Ключ для хранения истории сканирований
+const scannedCodesKey =
+    'scannedCodes'; // Ключ для хранения истории сканирований
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: appTitle,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: SplashScreen(),
+      home: const SplashScreen(),
     );
   }
 }
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -38,8 +44,9 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   _navigateToHome() async {
-    await Future.delayed(Duration(seconds: 3));
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => MyHomePage(title: scanTitle)));
+    await Future.delayed(const Duration(seconds: 3));
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MyHomePage(title: scanTitle)));
   }
 
   @override
@@ -51,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen> {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({super.key, required this.title});
   final String title;
 
   @override
@@ -80,12 +87,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _scanCode() async {
-    String scanRes = await FlutterBarcodeScanner.scanBarcode(scanButtonColor, cancelButtonText, true, ScanMode.QR);
-    if (!mounted || scanRes == '-1') return;
-    setState(() {
-      scannedCodes.add(scanRes);
-    });
-    _saveScannedCodes();
+    try {
+      String scanRes = await FlutterBarcodeScanner.scanBarcode(
+          scanButtonColor, cancelButtonText, true, ScanMode.QR);
+      if (!mounted || scanRes == '-1') return;
+      setState(() {
+        scannedCodes.add(scanRes);
+      });
+      _saveScannedCodes();
+    } catch (e) {
+      print("Ошибка при сканировании: $e");
+    }
   }
 
   @override
@@ -94,28 +106,6 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.history),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HistoryPage(
-                    scannedCodes: scannedCodes,
-                    onDelete: () {
-                      setState(() {
-                        scannedCodes.clear();
-                      });
-                      _saveScannedCodes();
-                    },
-                  ),
-                ),
-              );
-            },
-            tooltip: tooltipHistory,
-          ),
-        ],
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -126,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context, index) => ListTile(
                 title: Text(scannedCodes[index]),
                 trailing: IconButton(
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                   onPressed: () {
                     setState(() {
                       scannedCodes.removeAt(index);
@@ -141,11 +131,33 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
               onPressed: _scanCode,
-              child: Text(buttonScan),
-              style: ElevatedButton.styleFrom(backgroundColor: Color.fromARGB(255, 210, 222, 231)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFD2DEE7),
+              ),
+              child: const Text(buttonScan),
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HistoryPage(
+                scannedCodes: scannedCodes,
+                onDelete: () {
+                  setState(() {
+                    scannedCodes.clear();
+                  });
+                  _saveScannedCodes();
+                },
+              ),
+            ),
+          );
+        },
+        tooltip: tooltipHistory,
+        child: const Icon(Icons.history),
       ),
     );
   }
